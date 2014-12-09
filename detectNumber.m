@@ -14,7 +14,7 @@ function S = detectNumber(im)
         if ~(sum(sum(im(end-2:end, :), 2)>tol2*sizeY)>0)
             S = 2;
         else
-            if (sum(sum(im(floor(0.5*sizeX)-2:ceil(0.5*sizeX)+2, floor(0.5*sizeY):ceil(0.5*sizeY))==0)))
+            if (sum(sum(im(floor(0.5*sizeX)-3:ceil(0.5*sizeX)+3, floor(0.5*sizeY):ceil(0.5*sizeY))==0)))
                 S = 2;
             else
                 S = 0;
