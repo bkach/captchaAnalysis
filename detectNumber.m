@@ -1,7 +1,7 @@
 function S = detectNumber(im)
     tol  = 5;
     tol2 = 0.55;
-    [~, sizeY] = size(im);
+    [sizeX, sizeY] = size(im);
     % EITHER it's a ONE
     if (sum(im(:, end-2))<tol)
         S = 1;
@@ -14,7 +14,11 @@ function S = detectNumber(im)
         if ~(sum(sum(im(end-2:end, :), 2)>tol2*sizeY)>0)
             S = 2;
         else
-            S = 0;
+            if (sum(sum(im(floor(0.5*sizeX)-3:ceil(0.5*sizeX)+3, floor(0.5*sizeY):ceil(0.5*sizeY))==0)))
+                S = 2;
+            else
+                S = 0;
+            end
         end
     end
 end

@@ -16,6 +16,7 @@ function S = myclassifier(im, offset)
     maxY = maxY + 1;
     % crop image
     subimage = no_noise(minX:maxX, minY:maxY);
+%     subimage = imdilate(subimage, strel('square', 4));
     % update size of image that we work on
     sizeX = size(subimage, 1);
     sizeY = size(subimage, 2);
@@ -102,7 +103,7 @@ function S = myclassifier(im, offset)
         secondDigit = secondDigit(minX:maxX, minY:maxY);
         [minX, maxX, minY, maxY] = cropImage(thirdDigit, 0);
         thirdDigit = thirdDigit(minX:maxX, minY:maxY);
-        
+%         figure
 %         subplot(2, 3, [1, 3])
 %         imshow(subimage);
 %         subplot(2, 3, 5);
@@ -111,7 +112,6 @@ function S = myclassifier(im, offset)
 %         imshow(thirdDigit)
 %         subplot(2, 3, 4);
 %         imshow(firstDigit)
-%         pause(.5)
 %         results
         
 tempProp = [4 2 2; 4 2 6]; %getTemplateProperties();
