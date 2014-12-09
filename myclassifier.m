@@ -1,35 +1,26 @@
-function S = myclassifier(im)
+function S = myclassifier(im, offset)
+    %% default to zeros as return values
+    S = zeros(1, 3);
+    
     %% first pre-process image to remove noise
     se = strel('square', 4);
     binary_image = im2bw(im, graythresh(im));
     no_noise     = imclose(binary_image, se);
     
-    sizeX = size(no_noise, 1);
-    sizeY = size(no_noise, 2);
-    
     %% now find a sub-image on which we execute template matching
-    [minX, maxX, minY, maxY] = cropImage(no_noise);
-    
+    [minX, maxX, minY, maxY] = cropImage(no_noise, offset);
     % padding by ones to make sure distance transform gives correct result
     minX = minX - 1;
     maxX = maxX + 1;
     minY = minY - 1;
     maxY = maxY + 1;
-    
     % crop image
     subimage = no_noise(minX:maxX, minY:maxY);
     % update size of image that we work on
     sizeX = size(subimage, 1);
     sizeY = size(subimage, 2);
-    % image 1
-%     imwrite(subimage(1:end-4, 1:28), './template/default_template-2.png');
-%     imwrite(subimage(2:end-5, 30:54), './template/default_template-0.png');
-    % image 2
-%     imwrite(subimage(5:end-1, 35:49), './template/default_template-1.png');
-
-%% split subimage into separate images for each number
     
-    % Find boundaries
+    %% split subimage into separate images for each number
     index = 1;
     inObject = false;
     
@@ -48,94 +39,88 @@ function S = myclassifier(im)
             end
         end
     end
-    numObjects = length(results) / 2;
-    results
-    
-     if (numObjects < 3)
-         if(numObjects == 2)
-             widthObj1 = results(2) - results(1);
-             widthObj2 = results(4) - results(3);
-             
-             if(widthObj1 >= widthObj2)
-                 objectMin = results(1);
-                 objectMax = results(2);
-                 append = true;
-             else
-                 objectMin = results(3);
-                 objectMax = results(4);
-                 append = false;
-             end
-             
-             % Create sub-image
-             twoDigits  = subimage(:, objectMin:objectMax);
-             twoDigits = padarray(twoDigits, [1 1], 1, 'both');
-             
-             % Distance transform to find the center of the digit
-             D = bwdist(twoDigits);
+    numObjects = floor(length(results) / 2);
+    % depending on the number of objects that we found, perform another
+    % split or assign digits
+    if (numObjects < 3)
+        if (numObjects == 2)
+            % get width of objects
+            widthObj1 = results(2) - results(1);
+            widthObj2 = results(4) - results(3);
+            % use width of objects to decide which contains two digits
+            append = (widthObj1 >= widthObj2);
+            objectMin = results(3-2*append);
+            objectMax = results(4-2*append);
 
-             % Find maximum indices
-             [M, x] = max(max(D));
-             
-             leftDigit = twoDigits(:, objectMin:x);
-             rightDigit = twoDigits(:,x:objectMax);
-             
-             if(append)
+            % pad object that contains two digits to obtain correct
+            % distance transformation result
+            twoDigits = padarray(subimage(:, objectMin:objectMax), ...
+                                 [1 1], 1, 'both');
+            
+            % Distance transform to find the index, where we need to split
+            % the image
+            D = bwdist(twoDigits);
+            % M is maximum distance
+            % splitX is the index along x direction where we split
+            [M, splitX] = max(max(D));
+            % now split the object into two
+            leftDigit  = twoDigits(:, 1:splitX);
+            rightDigit = twoDigits(:, splitX:end);
+            
+            % assign correct digits
+            if append
                 firstDigit = leftDigit;
                 secondDigit = rightDigit;
                 thirdDigit = subimage(:,results(3):results(4));
-             else
+            else
                 firstDigit = subimage(:, results(1):results(2));
                 secondDigit = leftDigit;
                 thirdDigit = rightDigit;
-             end
-             
-         end
-     else
-         firstDigit  = subimage(:, results(1):results(2));
-         secondDigit = subimage(:, results(3):results(4));
-         thirdDigit  = subimage(:, results(5):results(6));
-     end
-     
-     firstDigit = imclose(firstDigit,strel('square',4));
-     secondDigit = imclose(secondDigit,strel('square',4));
-     thirdDigit = imclose(thirdDigit,strel('square',4));
-     
-         figure,
-    subplot(2,3,[1,3])
-    imshow(subimage);
-    subplot(2,3,4)
-    imshow(firstDigit);
-    subplot(2,3,5)
-    imshow(secondDigit);
-    subplot(2,3,6)
-    imshow(thirdDigit);
-     
-     [minX, maxX, minY, maxY] = cropImage(firstDigit);
-     firstDigit  = firstDigit(minX:maxX,minY:maxY);
-     [minX, maxX, minY, maxY] = cropImage(secondDigit);
-     secondDigit = secondDigit(minX:maxX,minY:maxY);
-     [minX, maxX, minY, maxY] = cropImage(thirdDigit);
-     thirdDigit  = thirdDigit(minX:maxX,minY:maxY);
-%      
-%      se = strel('square', 4);
-%     binary_image = im2bw(im, graythresh(im));
-%     no_noise     = imclose(binary_image, se);
+            end
+        else
+            firstDigit = [];
+            secondDigit = [];
+            thirdDigit = [];
+        end
+    % OR we're done
+    else
+        firstDigit  = subimage(:, results(1):results(2));
+        secondDigit = subimage(:, results(3):results(4));
+        thirdDigit  = subimage(:, results(5):results(6));
+    end
     
-    %% perform template matching on each sub-image
+    %% detect numbers in each image
+    % only try to find digits in case we have three images to work on
+    if ~(isempty(firstDigit) || isempty(secondDigit) || isempty(thirdDigit))
 
-    S(1) = classify(firstDigit,getTemplateProperties());
-    S(2) = classify(secondDigit,getTemplateProperties());
-    S(3) = classify(thirdDigit,getTemplateProperties());
-    
-    
-%     figure,
-%     subplot(2,3,[1,3])
-%     imshow(subimage);
-%     subplot(2,3,4)
-%     imshow(firstDigit);
-%     subplot(2,3,5)
-%     imshow(secondDigit);
-%     subplot(2,3,6)
-%     imshow(thirdDigit);
-    
-    
+        % firstly, get rid of unnecessary white space
+        [minX, maxX, minY, maxY] = cropImage(firstDigit, 0);
+        firstDigit = firstDigit(minX:maxX, minY:maxY);
+%         se = strel('square', 2);
+%         secondDigit = imclose(secondDigit, se);
+        [minX, maxX, minY, maxY] = cropImage(secondDigit, 0);
+        secondDigit = secondDigit(minX:maxX, minY:maxY);
+        [minX, maxX, minY, maxY] = cropImage(thirdDigit, 0);
+        thirdDigit = thirdDigit(minX:maxX, minY:maxY);
+        
+%         subplot(2, 3, [1, 3])
+%         imshow(subimage);
+%         subplot(2, 3, 5);
+%         imshow(secondDigit)
+%         subplot(2, 3, 6);
+%         imshow(thirdDigit)
+%         subplot(2, 3, 4);
+%         imshow(firstDigit)
+%         pause(.5)
+%         results
+        
+%         tempProp = getTemplateProperties();
+%         S(1) = classify(firstDigit, tempProp);
+%         S(2) = classify(secondDigit, tempProp);
+%         S(3) = classify(thirdDigit, tempProp);
+
+        
+        S(1) = detectNumber(firstDigit);
+        S(2) = detectNumber(secondDigit);
+        S(3) = detectNumber(thirdDigit);
+    end

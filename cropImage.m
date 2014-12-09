@@ -1,38 +1,38 @@
-function [minX, maxX, minY, maxY] = cropImage(im)
+function [minX, maxX, minY, maxY] = cropImage(im, offset)
     sizeX = size(im, 1);
     sizeY = size(im, 2);
-    find = true;
-    minX = 1;
-    while (find)
+    found = false;
+    minX = 1+offset;
+    while (~found)
         if (sum(im(minX, :))<sizeY)
-            find = false;
+            found = true;
         else
             minX = minX + 1;
         end
     end
-    find = true;
-    maxX = sizeX;
-    while (find)
+    found = false;
+    maxX = sizeX-offset;
+    while (~found)
         if (sum(im(maxX, :))<sizeY)
-            find = false;
+            found = true;
         else
             maxX = maxX - 1;
         end
     end
-    find = true;
-    minY = 1;
-    while (find)
+    found = false;
+    minY = 1+offset;
+    while (~found)
         if (sum(im(:, minY))<sizeX)
-            find = false;
+            found = true;
         else
             minY = minY + 1;
         end
     end
-    find = true;
-    maxY = sizeY;
-    while (find)
+    found = false;
+    maxY = sizeY-offset;
+    while (~found)
         if (sum(im(:, maxY))<sizeX)
-            find = false;
+            found = true;
         else
             maxY = maxY - 1;
         end
