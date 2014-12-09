@@ -27,11 +27,15 @@ gcmy = graycomatrix(ysec', 'NumLevels', 2);
 by = gcmy(1,2) + gcmy(2,1);
 
 p = cat(1,bx,by);
+d = zeros(1,2);
 % classify according to the properties found
 for i = 1:3
     % Compute manhattan distance with each point
-    d(i) = norm(p-templateprops(:,i),1);
+    dx = p(1) - templateprops(1,i);
+    dy = p(2) - templateprops(2,i);
+    d(i) = abs(dx) + 1.2 * abs(dy);
+    %d(i) = norm(p-templateprops(:,i),1);
 end
 
-[M, x] = min(d); % Get the index of minimum distance with element
-N = max(M - 1,0);
+[v, i] = min(d);
+N = max(i - 1,0);

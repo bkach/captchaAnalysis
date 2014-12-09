@@ -114,13 +114,13 @@ function S = myclassifier(im, offset)
 %         pause(.5)
 %         results
         
-%         tempProp = getTemplateProperties();
-%         S(1) = classify(firstDigit, tempProp);
-%         S(2) = classify(secondDigit, tempProp);
-%         S(3) = classify(thirdDigit, tempProp);
+tempProp = [4 2 2; 4 2 6]; %getTemplateProperties();
+S(1) = classify(firstDigit, tempProp);
+S(2) = classify(secondDigit, tempProp);
+S(3) = classify(thirdDigit, tempProp);
 
         
-        S(1) = detectNumber(firstDigit);
-        S(2) = detectNumber(secondDigit);
-        S(3) = detectNumber(thirdDigit);
+        %S(1) = detectNumber(firstDigit);
+        %S(2) = detectNumber(secondDigit);
+        %S(3) = detectNumber(thirdDigit);
     end
