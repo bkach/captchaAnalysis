@@ -55,33 +55,25 @@ function S = myclassifier(im, offset)
 
             % pad object that contains two digits to obtain correct
             % distance transformation result
-            twoDigits = padarray(subimage(:, objectMin:objectMax), ...
-                                 [1 1], 1, 'both');
+            twoDigits = subimage(:, objectMin:objectMax);
             
-            % Distance transform to find the index, where we need to split
-            % the image
-            D = bwdist(twoDigits);
-            % M is maximum distance
-            % splitX is the index along x direction where we split
-            [M, splitX] = max(max(D));
-            % now split the object into two
-            leftDigit  = twoDigits(:, 1:splitX);
-            rightDigit = twoDigits(:, splitX:end);
+            % now split the object in half
+            splitX = floor(size(twoDigits,1)/2);
             
             % assign correct digits
             if append
-                firstDigit = leftDigit;
-                secondDigit = rightDigit;
+                firstDigit = twoDigits(:, 1:splitX);
+                secondDigit = twoDigits(:, splitX:end);
                 thirdDigit = subimage(:,results(3):results(4));
             else
                 firstDigit = subimage(:, results(1):results(2));
-                secondDigit = leftDigit;
-                thirdDigit = rightDigit;
+                secondDigit = twoDigits(:, 1:splitX);
+                thirdDigit = twoDigits(:, splitX:end);
             end
         else
-            firstDigit = [];
-            secondDigit = [];
-            thirdDigit = [];
+            firstDigit = subimage(:,1:floor(sizeX/3));
+            secondDigit = subimage(:,floor(sizeX/3):floor(2*sizeX/3));
+            thirdDigit = subimage(:,floor(2*sizeX/3):sizeX);
         end
     % OR we're done
     else
